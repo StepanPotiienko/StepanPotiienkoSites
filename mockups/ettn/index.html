@@ -112,9 +112,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 /* ===== Map ===== */
 .map-wrap{position:relative;background:var(--surface-50);border-radius:8px;overflow:hidden}
 .map-grid{
-  display:grid;grid-template-columns:repeat(8,1fr);grid-auto-rows:34px;gap:3px;padding:14px;
+  display:grid;grid-template-columns:repeat(30,1fr);grid-auto-rows:auto;gap:2px;padding:12px 14px;
 }
-.cell{border-radius:4px;background:var(--surface-100)}
+.cell{aspect-ratio:1;border-radius:2px;background:var(--surface-100)}
 .cell.hot{background:var(--surface-800)}
 .cell.warm{background:var(--primary)}
 .cell.mid{background:var(--primary-300)}
@@ -197,17 +197,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 
   <div class="card"><h3>Статистика роботи сайту</h3><div class="chart-box h260"><canvas id="stPerf"></canvas></div></div>
 
-  <div class="cols" style="grid-template-columns:1.3fr 1fr 1fr">
-    <div class="card"><h3>Топ сторінки</h3>
-      <table>
-        <tr><th>Чиста назва</th><th class="num">Перегл.</th><th class="num">Сер. тривал.</th><th style="width:70px">Bounce</th></tr>
-        <tr><td>Головна</td><td class="num">168</td><td class="num">04:12</td><td><div class="mini-bar bar-orange"><div style="width:22%"></div></div></td></tr>
-        <tr><td>Послуги</td><td class="num">94</td><td class="num">03:05</td><td><div class="mini-bar bar-orange"><div style="width:31%"></div></div></td></tr>
-        <tr><td>Про компанію</td><td class="num">71</td><td class="num">02:48</td><td><div class="mini-bar bar-orange"><div style="width:40%"></div></div></td></tr>
-        <tr><td>Продукти</td><td class="num">58</td><td class="num">02:21</td><td><div class="mini-bar bar-orange"><div style="width:47%"></div></div></td></tr>
-      </table>
-    </div>
+  <div class="cols" style="grid-template-columns:1fr 1fr 1.3fr">
     <div class="card"><h3>Пристрої</h3><div class="chart-box h260"><canvas id="stDevices"></canvas></div></div>
+    <div class="card"><h3>Джерела трафіку (сеанси)</h3><div class="chart-box h260"><canvas id="stSources"></canvas></div></div>
     <div class="card"><h3>Топ країни</h3>
       <table>
         <tr><th>Країна</th><th class="num">Сеанси</th><th class="num">%</th></tr>
@@ -219,8 +211,16 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </div>
 
-  <div class="cols" style="grid-template-columns:1fr 1fr">
-    <div class="card"><h3>Джерела трафіку (сеанси)</h3><div class="chart-box h260"><canvas id="stSources"></canvas></div></div>
+  <div class="cols" style="grid-template-columns:1.3fr 1fr">
+    <div class="card"><h3>Топ сторінки</h3>
+      <table>
+        <tr><th>Чиста назва</th><th class="num">Перегл.</th><th class="num">Сер. тривал.</th><th style="width:70px">Bounce</th></tr>
+        <tr><td>Головна</td><td class="num">168</td><td class="num">04:12</td><td><div class="mini-bar bar-orange"><div style="width:22%"></div></div></td></tr>
+        <tr><td>Послуги</td><td class="num">94</td><td class="num">03:05</td><td><div class="mini-bar bar-orange"><div style="width:31%"></div></div></td></tr>
+        <tr><td>Про компанію</td><td class="num">71</td><td class="num">02:48</td><td><div class="mini-bar bar-orange"><div style="width:40%"></div></div></td></tr>
+        <tr><td>Продукти</td><td class="num">58</td><td class="num">02:21</td><td><div class="mini-bar bar-orange"><div style="width:47%"></div></div></td></tr>
+      </table>
+    </div>
     <div class="card"><h3>Нові vs користувачі, що повернулись</h3><div class="chart-box h260"><canvas id="stReturn"></canvas></div></div>
   </div>
 </div>
@@ -290,11 +290,20 @@ const baseOpts={
   scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(148,163,184,.15)'}},
           y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(148,163,184,.15)'}}}
 };
+// vertical gradient fill under area charts
+function gradArea(top,alphaTop,alphaBottom){
+  return {fill:true,backgroundColor:(ctx)=>{
+    const{chart}=ctx;if(!chart.chartArea)return top;
+    const g=chart.ctx.createLinearGradient(0,chart.chartArea.top,0,chart.chartArea.bottom);
+    g.addColorStop(0,hexA(top,alphaTop));g.addColorStop(1,hexA(top,alphaBottom));return g;
+  }};
+}
+function hexA(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
 const D=['1','3','5','7','9','11','13','15','17','19','21','23','25','27','29'];
 
 // OVERVIEW
 new Chart(document.getElementById('ovUsers'),{type:'line',
-  data:{labels:D,datasets:[{data:[8,12,10,16,14,18,22,20,26,24,28,32,30,35,31],borderColor:P,backgroundColor:G,fill:true,tension:.4,pointRadius:0}]},
+  data:{labels:D,datasets:[{label:'Активні користувачі',data:[8,12,10,16,14,18,22,20,26,24,28,32,30,35,31],borderColor:P,tension:.4,pointRadius:0,...gradArea(P,0.32,0.02)}]},
   options:baseOpts});
 new Chart(document.getElementById('ovSources'),{type:'doughnut',
   data:{labels:['google','instagram','facebook','інші'],datasets:[{data:[190,85,62,90],backgroundColor:[BLUE2,INSTA,FB,'#94a3b8'],borderWidth:2,borderColor:'#fff'}]},
@@ -310,7 +319,7 @@ new Chart(document.getElementById('ovChannels'),{type:'bar',
 // SITE
 new Chart(document.getElementById('stPerf'),{type:'line',
   data:{labels:D,datasets:[
-    {label:'Сеанси',data:[12,15,14,18,20,19,22,25,24,26,30,29,31,34,33,36,35,38,37,40,39,38,36,34,32,30,28,26,24,22,20],borderColor:P,backgroundColor:G,fill:true,tension:.3,pointRadius:0},
+    {label:'Сеанси',data:[12,15,14,18,20,19,22,25,24,26,30,29,31,34,33,36,35,38,37,40,39,38,36,34,32,30,28,26,24,22,20],borderColor:P,tension:.3,pointRadius:0,...gradArea(P,0.30,0.02)},
     {label:'Сеанси (попередній місяць)',data:[10,12,11,14,15,13,16,18,17,19,21,20,22,23,24,25,24,26,27,26,25,24,23,21,20,19,18,17,15,14,12],borderColor:P300,backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderDash:[5,4]}
   ]},
   options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{...baseOpts.plugins.legend,position:'top'}}}});
@@ -318,9 +327,10 @@ new Chart(document.getElementById('stDevices'),{type:'doughnut',
   data:{labels:['Windows','iOS','Android','Macintosh','Linux'],datasets:[{data:[38,25,18,14,5],backgroundColor:[BLUE2,ORANGE,'#a855f7',P,'#38bdf8'],borderWidth:2,borderColor:'#fff'}]},
   options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
     plugins:{legend:{position:'bottom',labels:{color:SLATE,font:{size:11}}}}}});
-new Chart(document.getElementById('stSources'),{type:'bar',
-  data:{labels:['google','instagram','facebook','agroprosperis.com','ettn.agroprosperis.com','secureurl.ukr.net','web.telegram.org'],datasets:[{data:[190,85,62,30,24,18,12],backgroundColor:[BLUE2,INSTA,FB,P,P600,'#7c3aed','#1e293b'],borderRadius:4}]},
-  options:{...baseOpts,indexAxis:'y'}});
+new Chart(document.getElementById('stSources'),{type:'doughnut',
+  data:{labels:['google','instagram','facebook','agroprosperis.com','ettn.agroprosperis.com','secureurl.ukr.net','web.telegram.org'],datasets:[{data:[190,85,62,30,24,18,12],backgroundColor:[BLUE2,INSTA,FB,P,P600,'#7c3aed','#1e293b'],borderWidth:2,borderColor:'#fff'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{position:'bottom',labels:{color:SLATE,font:{size:11}}}}}});
 new Chart(document.getElementById('stReturn'),{type:'bar',
   data:{labels:['Тиж 27','Тиж 28','Тиж 29','Тиж 30','Тиж 31'],datasets:[
     {label:'Нові',data:[58,70,76,92,104],backgroundColor:P,borderRadius:4},
@@ -338,18 +348,39 @@ new Chart(document.getElementById('seoTrends'),{type:'line',
   ]},
   options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{...baseOpts.plugins.legend,position:'top'}}}});
 
-// MAP
+// MAP — dot-matrix world. Rows 0-15, cols 0-29. Land defined as per-row [colStart,colEnd] ranges per continent.
+// H=hot(Ukraine), W=warm, M=mid, L=low
 (function(){
-  const cells=[];
-  for(let i=0;i<64;i++)cells.push(i);
-  const hot=[3,4,11,12,19,20,27,28,35,36,43,44,51,52,59,60];  // Ukraine block
-  const warm=[0,1,8,9,16,17,26,34,42,50,58,61,62];
-  const mid=[2,10,18,25,33,41,49,57,63];
   const el=document.getElementById('seoMap');
-  hot.forEach(i=>{const d=document.createElement('div');d.className='cell hot';el.appendChild(d);});
-  warm.forEach(i=>{const d=document.createElement('div');d.className='cell warm';el.appendChild(d);});
-  mid.forEach(i=>{const d=document.createElement('div');d.className='cell mid';el.appendChild(d);});
-  for(let i=0;i<64;i++){if(hot.includes(i)||warm.includes(i)||mid.includes(i))continue;const d=document.createElement('div');d.className='cell low';el.appendChild(d);}
+  el.style.gridTemplateColumns='repeat(30,1fr)';
+  const cell=function(cls){const d=document.createElement('div');d.className='cell '+cls;el.appendChild(d);};
+  // land grid, row->array of [c0,c1] (inclusive) continent ranges
+  const NA=[[3,8],[1,10],[0,11],[0,11],[0,11],[0,10],[0,9],[1,9],[2,8],[3,7]];
+  const GL=[[9,11],[8,11]];
+  const SA=[[5,8],[4,8],[3,8],[3,8],[4,8],[4,7],[4,6]];
+  const EU=[[13,17],[12,18],[12,18],[13,17],[14,17]];
+  const AF=[[12,17],[11,18],[11,18],[11,18],[11,18],[11,17],[12,16],[13,15]];
+  const AS=[[19,28],[18,29],[18,29],[18,29],[18,29],[18,29],[18,28],[19,27],[21,25]];
+  const AU=[[23,27],[22,28],[22,27],[23,26]];
+  const LAND={NA,GL,SA,EU,AF,AS,AU};
+  const grid={};
+  Object.entries(LAND).forEach(([name,ranges])=>{
+    ranges.forEach(([c0,c1],r)=>{
+      for(let c=c0;c<=c1;c++)grid[r+','+c]=(grid[r+','+c]||0)+1;
+    });
+  });
+  // intensity: Ukraine ~ row2-3,col16-17 hot; nearby warm; far mid
+  const isUA=(r,c)=>((r===2||r===3)&&(c===16||c===17))||(r===3&&c===15);
+  const isEU=(r,c)=>EU.some(([a,b],i)=>i===r&&c>=a&&c<=b);
+  for(let r=0;r<16;r++){
+    for(let c=0;c<30;c++){
+      if(!grid[r+','+c]){cell('base');continue;}
+      if(isUA(r,c))cell('hot');
+      else if(isEU(r,c))cell('warm');
+      else if(grid[r+','+c]>1)cell('mid');
+      else cell('low');
+    }
+  }
 })();
 
 // TABS
