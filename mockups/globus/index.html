@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Globus TC — Маркетингова аналітика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F3F4F7;
+    --surface:#FFFFFF;
+    --ink:#1B1D22;
+    --ink-soft:#686D78;
+    --ink-faint:#A2A7B0;
+    --line:#E2E4EA;
+    --brand:#2B46D6;
+    --brand-dark:#1B2A8C;
+    --brand-soft:#E5E9FC;
+    --yellow:#EFC94A;
+    --yellow-soft:#FBF1D3;
+    --steel:#55749E;
+    --steel-soft:#E7ECF3;
+    --positive:#2F8F4E;
+    --positive-soft:#E4F3E8;
+    --negative:#D64545;
+    --negative-soft:#FBE7E7;
+    --blue:#55749E;
+    --blue-soft:#E7ECF3;
+    --gold:#2B46D6;
+    --gold-soft:#E5E9FC;
+    --faint:#C7CCD6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    padding:40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+
+  body{ padding:0 0 40px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 40px; }
+
+  /* ---------- Brand bar (logo + tabs), Globus blue ---------- */
+  .brandbar{ background:var(--brand-dark); margin-bottom:28px; }
+  .brandbar-inner{ max-width:1180px; margin:0 auto; padding:0 40px; }
+  header{
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+    padding:20px 0 18px;
+  }
+  .header-title{
+    font-family:'Inter'; font-weight:800; font-size:24px; color:#FFFFFF; text-align:center;
+  }
+  .range{ justify-self:end; }
+  .logo-row{ display:flex; align-items:center; gap:12px; }
+  .logo-ring{
+    width:34px; height:34px; border-radius:50%; border:3px solid #FFFFFF;
+    flex-shrink:0;
+  }
+  .logo-text{ display:flex; flex-direction:column; }
+  h1{
+    font-family:'Inter'; font-weight:800; font-size:22px; letter-spacing:.03em;
+    color:#FFFFFF; text-transform:uppercase;
+  }
+  .eyebrow{
+    font-family:'Inter'; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:rgba(255,255,255,.62); font-weight:600; margin-top:2px; display:block;
+  }
+  .range{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; color:#FFFFFF; font-weight:600;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); border-radius:6px;
+    padding:9px 16px;
+  }
+  .range svg{width:14px; height:14px; stroke:#FFFFFF;}
+
+  .tabs{ display:flex; gap:2px; border-top:1px solid rgba(255,255,255,.14); }
+  .tabs.centered{ justify-content:center; }
+  .tab{
+    font-family:'Inter'; font-size:12.5px; font-weight:700; color:rgba(255,255,255,.68);
+    background:none; border:none; cursor:pointer;
+    padding:13px 20px; position:relative; letter-spacing:.06em; text-transform:uppercase;
+  }
+  .tab:hover{color:#FFFFFF;}
+  .tab.active{color:#FFFFFF;}
+  .tab.active::after{ content:''; position:absolute; left:20px; right:20px; bottom:0; height:3px; background:var(--yellow); }
+
+  .page{display:none;}
+  .page.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);}}
+
+  .kpi-row{ display:grid; gap:16px; margin-bottom:20px; }
+  .kpi-row.cols-4{grid-template-columns:repeat(4, 1fr);}
+  .kpi-row.cols-5{grid-template-columns:repeat(5, 1fr);}
+  .kpi-row.cols-6{grid-template-columns:repeat(6, 1fr);}
+  .kpi-row.cols-7{grid-template-columns:repeat(7, 1fr);}
+  .kpi-row.cols-7 .value{font-size:19px;}
+  .kpi-row.cols-5 .value{font-size:20px;}
+
+  .panel-flex{ display:flex; align-items:center; gap:18px; }
+  .chart-box.small{ height:200px; flex:1; min-width:0; }
+  .legend-col{ display:flex; flex-direction:column; gap:9px; flex-shrink:0; }
+  .legend-col .legend-item{ font-size:11.5px; }
+
+  .section-caps{
+    font-family:'Inter'; font-size:13px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:14px;
+  }
+  .social-overview{ margin-top:6px; }
+  .social-strip{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .social-card{ background:none; border:none; padding:0; }
+  .social-card-head{ font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .net-dot{ width:9px; height:9px; border-radius:50%; }
+  .net-dot.fb{ background:#1877F2; }
+  .net-dot.ig{ background:#E1306C; }
+  .social-card-stats{ display:flex; gap:40px; }
+  .social-card-stats > div{
+    display:flex; flex-direction:column; gap:5px; padding:14px 18px;
+    background:var(--surface); border:1px solid var(--line); border-radius:6px; min-width:110px;
+  }
+  .stat-label{ font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+  .stat-value{ font-size:22px; font-weight:500; color:var(--ink); }
+  .social-card-stats .delta{ background:none; padding:0; font-size:12.5px; }
+
+  /* ---------- Simplified world map (SEO top countries) ---------- */
+  .map-box{ position:relative; height:240px; background:var(--bg); border-radius:6px; overflow:hidden; }
+  .world-svg{ width:100%; height:100%; display:block; }
+  .world-svg .continent{ fill:var(--line); }
+  .world-svg .geo-dot{ fill:var(--brand); stroke:#FFFFFF; stroke-width:2; }
+  .kpi{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px 15px; }
+  .kpi.featured{ border:1.5px solid var(--yellow); background:var(--yellow-soft); }
+  .kpi .label{
+    font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-soft);
+    font-weight:700; margin-bottom:11px; display:flex; align-items:center; gap:7px;
+  }
+  .kpi .dot{width:6px; height:6px; border-radius:50%; background:var(--brand); flex-shrink:0;}
+  .kpi.featured .dot{ background:var(--brand); }
+  .kpi .value{
+    font-family:'Inter', sans-serif; font-size:23px; font-weight:800; letter-spacing:-.01em; color:var(--ink);
+    padding-bottom:9px; margin-bottom:8px; border-bottom:none;
+  }
+  .kpi-row.cols-4 .value{font-size:27px;}
+  .kpi .delta{
+    font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:4px;
+    padding:3px 7px; border-radius:100px;
+  }
+  .kpi .delta.up{color:var(--positive); background:var(--positive-soft);}
+  .kpi .delta.down{color:var(--negative); background:var(--negative-soft);}
+  .kpi .sub{font-size:11.5px; color:var(--ink-faint); margin-left:6px;}
+
+  .chart-row{ display:grid; grid-template-columns:1.6fr 1fr; gap:18px; margin-bottom:18px; }
+  .chart-row.even{grid-template-columns:1fr 1fr;}
+  .panel{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:22px; }
+  .chart-row .panel{ display:flex; flex-direction:column; }
+  .chart-row .panel .chart-box,
+  .chart-row .panel .map-box{ flex:1; min-height:0; }
+  .panel h2{ font-family:'Inter', sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; margin-bottom:2px; color:var(--ink); }
+  .panel .panel-sub{font-size:11.5px; color:var(--ink-soft); margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;}
+  .src-tag{
+    font-size:9.5px; font-weight:700; letter-spacing:.04em; color:var(--ink-soft);
+    background:var(--bg); border:1px solid var(--line); padding:2px 8px; border-radius:4px;
+  }
+  .chart-box{position:relative; height:240px;}
+  .legend-row{display:flex; gap:16px; margin-top:14px; flex-wrap:wrap;}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--ink-soft);}
+  .legend-swatch{width:9px; height:9px; border-radius:2px;}
+
+  .table-panel{margin-bottom:18px;}
+  .chart-row .table-panel{margin-bottom:0;}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{
+    text-align:left; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--ink-soft); font-weight:600; padding-bottom:10px; border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:12px 8px; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums;}
+  td.name{font-weight:600;}
+  .bar-cell{display:flex; align-items:center; justify-content:flex-end; gap:8px;}
+  .bar-cell .bar-track{width:70px; height:6px; background:var(--bg); border-radius:3px; overflow:hidden;}
+  .bar-cell .bar-fill{height:100%; background:var(--brand); border-radius:3px;}
+  .tag{ font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:100px; letter-spacing:.02em; }
+  .tag.organic{background:var(--positive-soft); color:var(--positive);}
+  .tag.ads{background:var(--gold-soft); color:var(--gold);}
+  .tag.social{background:var(--blue-soft); color:var(--blue);}
+
+  .sources{ display:flex; align-items:center; justify-content:space-between; padding-top:18px; border-top:1px solid var(--line); }
+  .sources .label{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); font-weight:600;}
+
+  /* ---------- Social: per-network sections (template layout) ---------- */
+  .net-section{ margin-bottom:30px; }
+  .net-grid{ display:flex; gap:16px; }
+  .net-section{ display:flex; flex-direction:column; }
+  .net-title{
+    font-family:'Inter'; font-size:19px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.02em; margin-bottom:14px;
+  }
+  .net-title.fb{ color:#1877F2; }
+  .net-title.ig{ color:#E1306C; }
+  .net-kpis{ display:flex; gap:16px; flex-wrap:wrap; }
+  .net-kpis .kpi{ flex:0 0 auto; min-width:190px; }
+  .kpi.net-fb, .kpi.net-ig{ background:var(--surface); border-radius:6px; padding:14px 16px 13px; }
+  .kpi.net-fb{ border:1.5px solid #1877F2; }
+  .kpi.net-ig{ border:1.5px solid #E1306C; }
+  .kpi.net-fb .label, .kpi.net-ig .label{ color:var(--ink-soft); }
+  .kpi.net-fb .value, .kpi.net-ig .value{ padding-bottom:0; margin-bottom:6px; font-size:21px; }
+  .source-list{display:flex; gap:10px;}
+  .source-chip{
+    font-size:12px; font-weight:500; color:var(--ink-soft);
+    border:1px solid var(--line); background:var(--surface);
+    padding:6px 13px; border-radius:100px; display:flex; align-items:center; gap:6px;
+  }
+  .source-chip .pulse{width:6px; height:6px; border-radius:50%; background:var(--positive);}
+</style>
+</head>
+<body>
+
+<div class="brandbar">
+  <div class="brandbar-inner">
+    <header>
+      <div class="logo-row">
+        <span class="logo-ring"></span>
+        <div class="logo-text">
+          <h1>Globus</h1>
+          <span class="eyebrow">ТЦ · Майдан Незалежності</span>
+        </div>
+      </div>
+      <div class="header-title">Маркетинговий дашборд</div>
+      <div class="range">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        1 – 31 липня 2026
+      </div>
+    </header>
+    <nav class="tabs centered">
+      <button class="tab active" data-page="overview">Огляд</button>
+      <button class="tab" data-page="site">Сайт</button>
+      <button class="tab" data-page="seo">SEO</button>
+      <button class="tab" data-page="social">Соц. Мережі</button>
+      <button class="tab" data-page="ads">Реклама</button>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="page active" id="page-overview">
+    <div class="kpi-row cols-7">
+      <div class="kpi featured"><div class="label">Сесії</div><div class="value">86 400</div><span class="delta up">▲ 12,4%</span></div>
+      <div class="kpi"><div class="label">Актив. корист.</div><div class="value">21 400</div><span class="delta up">▲ 9,2%</span></div>
+      <div class="kpi"><div class="label">Нові корист.</div><div class="value">14 900</div><span class="delta up">▲ 7,5%</span></div>
+      <div class="kpi"><div class="label">Сторінок / сесія</div><div class="value">3,6</div><span class="delta down">▼ 1,1%</span></div>
+      <div class="kpi"><div class="label">Взаємодій %</div><div class="value">47,3%</div><span class="delta down">▼ 6,8%</span></div>
+      <div class="kpi"><div class="label">Сер. трив. сеан.</div><div class="value">03:41</div><span class="delta down">▼ 10,8%</span></div>
+      <div class="kpi"><div class="label">Нов. корист. %</div><div class="value">69,6%</div><span class="delta down">▼ 0,2%</span></div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Активні користувачі</h2>
+        <div class="panel-sub"><span>Цей / попер. місяць</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="ov-users"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Динаміка трафіку по тижнях</h2>
+        <div class="panel-sub"><span>Сесії</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="ov-weeks"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Канали залучення</h2>
+        <div class="panel-sub"><span>Сесії</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="ov-acquisition"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Джерела трафіку</h2>
+        <div class="panel-sub"><span>Розподіл за каналами</span><span class="src-tag">GA4</span></div>
+        <div class="panel-flex">
+          <div class="chart-box small"><canvas id="ov-channel"></canvas></div>
+          <div class="legend-col" id="ov-channel-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="social-overview">
+      <h2 class="section-caps">Соціальні мережі — загальний огляд</h2>
+      <div class="net-grid">
+        <div class="net-section">
+          <h3 class="net-title fb">Facebook</h3>
+          <div class="net-kpis">
+            <div class="kpi"><div class="label">Підписники</div><div class="value">18 240</div><span class="delta up">▲ 2,1%</span></div>
+            <div class="kpi"><div class="label">Перегляди</div><div class="value">74 300</div><span class="delta up">▲ 14,2%</span></div>
+          </div>
+        </div>
+        <div class="net-section">
+          <h3 class="net-title ig">Instagram</h3>
+          <div class="net-kpis">
+            <div class="kpi"><div class="label">Підписники</div><div class="value">9 860</div><span class="delta up">▲ 5,4%</span></div>
+            <div class="kpi"><div class="label">Перегляди</div><div class="value">28 400</div><span class="delta up">▲ 31,2%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-site">
+    <div class="kpi-row cols-6">
+      <div class="kpi featured"><div class="label"><span class="dot"></span>Акт. користувачі</div><div class="value">21 400</div><span class="delta up">▲ 9,2%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Нові користувачі</div><div class="value">14 900</div><span class="delta up">▲ 7,5%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Сесії</div><div class="value">86 400</div><span class="delta up">▲ 12,4%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Сторінок / сесія</div><div class="value">3,6</div><span class="delta down">▼ 1,1%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Сер. трив. сеансу</div><div class="value">02:47</div><span class="delta up">▲ 4,0%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>% нових корист.</div><div class="value">69,6%</div><span class="delta down">▼ 0,4%</span></div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Активні користувачі</h2>
+        <div class="panel-sub"><span>По днях місяця</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="site-users"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Динаміка сеансів по тижнях</h2>
+        <div class="panel-sub"><span>Сесії</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="site-weeks"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="panel">
+        <h2>Канали залучення</h2>
+        <div class="panel-sub"><span>Сесії за джерелом</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="site-acquisition"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Пристрої</h2>
+        <div class="panel-sub"><span>Сесії за типом пристрою</span><span class="src-tag">GA4</span></div>
+        <div class="chart-box"><canvas id="site-devices"></canvas></div>
+        <div class="legend-row" id="site-devices-legend"></div>
+      </div>
+    </div>
+
+    <div class="panel table-panel">
+      <h2>Топ сторінки</h2>
+      <div class="panel-sub"><span>За переглядами</span><span class="src-tag">GA4</span></div>
+      <table>
+        <thead><tr><th>Сторінка</th><th class="num">Нові корист.</th><th class="num">Акт. корист.</th><th class="num">Перегляди</th><th class="num">% перегл.</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Головна</td><td class="num">2 140</td><td class="num">6 810</td><td class="num"><div class="bar-cell">18 220<span class="bar-track"><span class="bar-fill" style="width:100%"></span></span></div></td><td class="num">21,1%</td></tr>
+          <tr><td class="name">/stores/ — Магазини</td><td class="num">1 480</td><td class="num">4 990</td><td class="num"><div class="bar-cell">12 640<span class="bar-track"><span class="bar-fill" style="width:69%"></span></span></div></td><td class="num">14,6%</td></tr>
+          <tr><td class="name">/category/aktsiyi/ — Акції</td><td class="num">1 190</td><td class="num">3 720</td><td class="num"><div class="bar-cell">9 380<span class="bar-track"><span class="bar-fill" style="width:51%"></span></span></div></td><td class="num">10,9%</td></tr>
+          <tr><td class="name">/restaurants/ — Ресторани</td><td class="num">860</td><td class="num">2 610</td><td class="num"><div class="bar-cell">6 040<span class="bar-track"><span class="bar-fill" style="width:33%"></span></span></div></td><td class="num">7,0%</td></tr>
+          <tr><td class="name">/contacts/ — Контакти</td><td class="num">540</td><td class="num">1 980</td><td class="num"><div class="bar-cell">4 110<span class="bar-track"><span class="bar-fill" style="width:23%"></span></span></div></td><td class="num">4,8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" id="page-seo">
+    <div class="kpi-row cols-4">
+      <div class="kpi featured"><div class="label"><span class="dot"></span>Покази</div><div class="value">214 000</div><span class="delta up">▲ 6,1%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Кліки</div><div class="value">9 640</div><span class="delta up">▲ 8,7%</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Середній CTR</div><div class="value">4,5%</div><span class="delta up">▲ 0,3 в.п.</span></div>
+      <div class="kpi"><div class="label"><span class="dot"></span>Середня позиція</div><div class="value">8,3</div><span class="delta up">▲ 0,6</span></div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Кліки та покази в часі</h2>
+        <div class="panel-sub"><span>По тижнях</span><span class="src-tag">GSC</span></div>
+        <div class="chart-box"><canvas id="seo-trend"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Розподіл за пристроями</h2>
+        <div class="panel-sub"><span>Кліки</span><span class="src-tag">GSC</span></div>
+        <div class="chart-box"><canvas id="seo-devices"></canvas></div>
+        <div class="legend-row" id="seo-devices-legend"></div>
+      </div>
+    </div>
+
+    <div class="panel table-panel">
+      <h2>Топ пошукові запити</h2>
+      <div class="panel-sub"><span>За кліками</span><span class="src-tag">GSC</span></div>
+      <table>
+        <thead><tr><th>Запит</th><th class="num">Покази</th><th class="num">Кліки</th><th class="num">CTR</th><th class="num">Позиція</th></tr></thead>
+        <tbody>
+          <tr><td class="name">globus київ</td><td class="num">38 400</td><td class="num">2 210</td><td class="num">5,8%</td><td class="num">2,4</td></tr>
+          <tr><td class="name">тц майдан незалежності</td><td class="num">26 700</td><td class="num">1 480</td><td class="num">5,5%</td><td class="num">3,1</td></tr>
+          <tr><td class="name">магазини глобус київ</td><td class="num">19 900</td><td class="num">960</td><td class="num">4,8%</td><td class="num">4,6</td></tr>
+          <tr><td class="name">globus ресторани</td><td class="num">11 200</td><td class="num">510</td><td class="num">4,6%</td><td class="num">6,0</td></tr>
+          <tr><td class="name">шопінг центр києва</td><td class="num">8 350</td><td class="num">290</td><td class="num">3,5%</td><td class="num">9,8</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel table-panel">
+      <h2>Топ сторінки в пошуку</h2>
+      <div class="panel-sub"><span>За кліками</span><span class="src-tag">GSC</span></div>
+      <table>
+        <thead><tr><th>Сторінка</th><th class="num">Покази</th><th class="num">Кліки</th><th class="num">CTR</th><th class="num">Позиція</th></tr></thead>
+        <tbody>
+          <tr><td class="name">/ — Головна</td><td class="num">61 200</td><td class="num">3 340</td><td class="num">5,5%</td><td class="num">2,9</td></tr>
+          <tr><td class="name">/stores/</td><td class="num">44 800</td><td class="num">2 010</td><td class="num">4,5%</td><td class="num">5,2</td></tr>
+          <tr><td class="name">/category/aktsiyi/</td><td class="num">28 100</td><td class="num">1 190</td><td class="num">4,2%</td><td class="num">7,1</td></tr>
+          <tr><td class="name">/restaurants/</td><td class="num">19 700</td><td class="num">740</td><td class="num">3,8%</td><td class="num">8,4</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-row">
+      <div class="panel">
+        <h2>Топ країни — покази</h2>
+        <div class="panel-sub"><span>Географія імпресій</span><span class="src-tag">GSC</span></div>
+        <div class="map-box">
+          <svg class="world-svg" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+            <polygon class="continent" points="90,80 250,60 300,140 260,220 150,210 100,150"/>
+            <polygon class="continent" points="230,230 320,220 340,320 290,420 240,380 220,300"/>
+            <polygon class="continent" points="470,70 560,65 570,140 500,150 460,110"/>
+            <polygon class="continent" points="480,150 580,145 600,260 540,380 470,370 450,240"/>
+            <polygon class="continent" points="570,40 900,50 880,180 750,260 620,220 560,140"/>
+            <polygon class="continent" points="780,320 880,310 870,390 800,400"/>
+            <circle class="geo-dot" cx="586" cy="114" r="13"><title>Україна — 158 000 показів</title></circle>
+            <circle class="geo-dot" cx="553" cy="106" r="8"><title>Польща — 24 100 показів</title></circle>
+            <circle class="geo-dot" cx="528" cy="108" r="6"><title>Німеччина — 11 300 показів</title></circle>
+            <circle class="geo-dot" cx="494" cy="100" r="5.5"><title>Велика Британія — 8 900 показів</title></circle>
+            <circle class="geo-dot" cx="228" cy="142" r="6"><title>США — 10 200 показів</title></circle>
+          </svg>
+        </div>
+      </div>
+      <div class="panel table-panel">
+        <h2>Топ країни</h2>
+        <div class="panel-sub"><span>За показами</span><span class="src-tag">GSC</span></div>
+        <table>
+          <thead><tr><th>Країна</th><th class="num">Кліки</th><th class="num">Імпресії</th><th class="num">Позиція</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Україна</td><td class="num">8 640</td><td class="num">158 000</td><td class="num">7,8</td></tr>
+            <tr><td class="name">Польща</td><td class="num">610</td><td class="num">24 100</td><td class="num">14,2</td></tr>
+            <tr><td class="name">Німеччина</td><td class="num">210</td><td class="num">11 300</td><td class="num">18,6</td></tr>
+            <tr><td class="name">США</td><td class="num">140</td><td class="num">10 200</td><td class="num">21,4</td></tr>
+            <tr><td class="name">Велика Британія</td><td class="num">90</td><td class="num">8 900</td><td class="num">23,1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-social">
+
+    <div class="net-section">
+      <h3 class="net-title fb">Facebook</h3>
+      <div class="kpi-row cols-6">
+        <div class="kpi net-fb"><div class="label">Підписники</div><div class="value">18 240</div><span class="delta up">▲ 2,1%</span></div>
+        <div class="kpi net-fb"><div class="label">Охоплення</div><div class="value">51 900</div><span class="delta up">▲ 18,9%</span></div>
+        <div class="kpi net-fb"><div class="label">Взаємодій</div><div class="value">2 240</div><span class="delta up">▲ 9,4%</span></div>
+        <div class="kpi net-fb"><div class="label">Лайки</div><div class="value">3 410</div><span class="delta up">▲ 12,0%</span></div>
+        <div class="kpi net-fb"><div class="label">Перегл. проф.</div><div class="value">6 120</div><span class="delta up">▲ 22,4%</span></div>
+        <div class="kpi net-fb"><div class="label">Коментарі</div><div class="value">184</div><span class="delta up">▲ 6,7%</span></div>
+      </div>
+      <div class="chart-row even">
+        <div class="panel">
+          <div class="panel-sub"><span>Всього підписників — цей / попер. місяць</span><span class="src-tag">Facebook</span></div>
+          <div class="chart-box"><canvas id="fb-followers"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-sub"><span>Приріст підписників — цей / попер. місяць</span><span class="src-tag">Facebook</span></div>
+          <div class="chart-box"><canvas id="fb-growth"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="net-section">
+      <h3 class="net-title ig">Instagram</h3>
+      <div class="kpi-row cols-6">
+        <div class="kpi net-ig"><div class="label">Підписники</div><div class="value">9 860</div><span class="delta up">▲ 5,4%</span></div>
+        <div class="kpi net-ig"><div class="label">Охоплення</div><div class="value">28 400</div><span class="delta up">▲ 31,2%</span></div>
+        <div class="kpi net-ig"><div class="label">Взаємодії</div><div class="value">1 980</div><span class="delta up">▲ 14,1%</span></div>
+        <div class="kpi net-ig"><div class="label">Коментарі</div><div class="value">312</div><span class="delta up">▲ 9,0%</span></div>
+        <div class="kpi net-ig"><div class="label">Лайки</div><div class="value">5 640</div><span class="delta up">▲ 16,8%</span></div>
+        <div class="kpi net-ig"><div class="label">Збереж. постів</div><div class="value">410</div><span class="delta up">▲ 21,5%</span></div>
+      </div>
+      <div class="chart-row even">
+        <div class="panel">
+          <div class="panel-sub"><span>Всього підписників — цей / попер. місяць</span><span class="src-tag">Instagram</span></div>
+          <div class="chart-box"><canvas id="ig-followers"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-sub"><span>Приріст підписників — цей / попер. місяць</span><span class="src-tag">Instagram</span></div>
+          <div class="chart-box"><canvas id="ig-growth"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="page" id="page-ads">
+    <div class="kpi-row cols-5">
+      <div class="kpi featured"><div class="label">Охоплення</div><div class="value">210 000</div><span class="delta up">▲ 8,2%</span></div>
+      <div class="kpi"><div class="label">Перегл. сайту</div><div class="value">8 400</div><span class="delta up">▲ 11,6%</span></div>
+      <div class="kpi"><div class="label">Покази</div><div class="value">312 000</div><span class="delta up">▲ 5,4%</span></div>
+      <div class="kpi"><div class="label">Кліки</div><div class="value">10 900</div><span class="delta up">▲ 7,9%</span></div>
+      <div class="kpi"><div class="label">CTR</div><div class="value">3,5%</div><span class="delta up">▲ 0,2 в.п.</span></div>
+    </div>
+    <div class="kpi-row cols-5">
+      <div class="kpi"><div class="label">Ціна показу</div><div class="value">₴12,20</div><span class="delta down">▼ 4,0%</span></div>
+      <div class="kpi"><div class="label">Сер. ціна за клік</div><div class="value">₴3,50</div><span class="delta down">▼ 5,1%</span></div>
+      <div class="kpi"><div class="label">Бюджет</div><div class="value">₴40 000</div><span class="delta up">0,0%</span></div>
+      <div class="kpi"><div class="label">Вартість ліда</div><div class="value">₴28,50</div><span class="delta down">▼ 6,3%</span></div>
+      <div class="kpi"><div class="label">Ліди</div><div class="value">1 340</div><span class="delta up">▲ 11,0%</span></div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Динаміка витрат по днях</h2>
+        <div class="panel-sub"><span>Цей / попер. місяць</span><span class="src-tag">Google Ads</span></div>
+        <div class="chart-box"><canvas id="ads-spend-days"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Розподіл витрат</h2>
+        <div class="panel-sub"><span>За групами оголошень</span><span class="src-tag">Google Ads</span></div>
+        <div class="panel-flex">
+          <div class="chart-box small"><canvas id="ads-campaigns"></canvas></div>
+          <div class="legend-col" id="ads-campaigns-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-row even">
+      <div class="panel">
+        <h2>Покази по тижнях</h2>
+        <div class="panel-sub"><span>Цей / попер. місяць</span><span class="src-tag">Google Ads</span></div>
+        <div class="chart-box"><canvas id="ads-weeks"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Динаміка лідів та CPA</h2>
+        <div class="panel-sub"><span>По днях</span><span class="src-tag">Google Ads</span></div>
+        <div class="chart-box"><canvas id="ads-leads-cpa"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel table-panel">
+      <h2>Топ кампаній</h2>
+      <div class="panel-sub"><span>За витратами</span><span class="src-tag">Google Ads</span></div>
+      <table>
+        <thead><tr><th>Кампанія</th><th class="num">Покази</th><th class="num">CPA</th><th class="num">Витрати бюджету</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Акції — липень</td><td class="num">118 000</td><td class="num">₴27,10</td><td class="num">₴14 600</td></tr>
+          <tr><td class="name">Бренди — ретаргетинг</td><td class="num">76 400</td><td class="num">₴24,80</td><td class="num">₴9 800</td></tr>
+          <tr><td class="name">Ресторани та фудкорт</td><td class="num">58 200</td><td class="num">₴31,40</td><td class="num">₴6 200</td></tr>
+          <tr><td class="name">Бренд-запит (Brand Search)</td><td class="num">39 900</td><td class="num">₴19,60</td><td class="num">₴4 100</td></tr>
+          <tr><td class="name">Сезонні пропозиції</td><td class="num">19 500</td><td class="num">₴38,90</td><td class="num">₴3 500</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const ink='#1B1D22', gold='#2B46D6', soft='#686D78', line='#E2E4EA',
+        positive='#2F8F4E', negative='#D64545', blue='#55749E', faint='#D7DCE5', accent='#EFC94A';
+  // gold = Globus brand blue (primary), blue = steel (secondary), faint = neutral grey (de-emphasis), accent = Globus yellow (single-point highlight)
+
+  const baseGrid = { grid:{ color: line }, ticks:{ color: soft, font:{ size:11 } }, border:{ display:false } };
+  const noGridX = { grid:{ display:false }, ticks:{ color: soft, font:{ size:11 } } };
+
+  // Vertical gradient fill under an area/line chart (context-based, chart.js v3/v4)
+  function gradArea(ctx, color, alphaTop, alphaBottom){
+    const g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    g.addColorStop(0, color + alphaTop);
+    g.addColorStop(1, color + alphaBottom);
+    return g;
+  }
+
+  const initialized = {};
+
+  function buildLegend(containerId, labels, values, colors, unit){
+    const el = document.getElementById(containerId);
+    if(!el) return;
+    labels.forEach((l,i)=>{
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `<span class="legend-swatch" style="background:${colors[i]}"></span>${l} — ${values[i]}${unit||''}`;
+      el.appendChild(item);
+    });
+  }
+
+  function initOverview(){
+    new Chart(document.getElementById('ov-users'), { type:'line',
+      data:{ labels:['1','5','9','13','17','21','25','29'],
+        datasets:[
+          { label:'Цей місяць', data:[14,16,26,9,22,16,17,24], borderColor:gold, backgroundColor:(c)=>gradArea(c.chart.ctx, gold, '55','05'), borderWidth:2.5, pointRadius:0, tension:.45, fill:true },
+          { label:'Попер. місяць', data:[10,18,10,14,15,23,9,13], borderColor:soft, borderDash:[5,4], backgroundColor:'transparent', borderWidth:2, pointRadius:0, tension:.45, fill:false }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}}, scales:{ x:noGridX, y:baseGrid } } });
+
+    new Chart(document.getElementById('ov-weeks'), { type:'bar',
+      data:{ labels:['Тиж. 27','Тиж. 28','Тиж. 29','Тиж. 30','Тиж. 31'],
+        datasets:[{ data:[68,120,88,70,77], backgroundColor:['#2B46D622','#2B46D688','#2B46D6BB','#2B46D6DD','#2B46D6FF'], borderRadius:3, maxBarThickness:34 }] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:noGridX, y:baseGrid } } });
+
+    new Chart(document.getElementById('ov-acquisition'), { type:'bar',
+      data:{ labels:['google','instagram','facebook','organic direct','agroprosperis.com','yahoo'],
+        datasets:[{ data:[140,54,18,9,6,3], backgroundColor:gold, borderRadius:3, maxBarThickness:18 }] },
+      options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:baseGrid, y:{ grid:{display:false}, ticks:{ color:soft, font:{size:11} } } } } });
+
+    const ch = { labels:['google','instagram','facebook','agroprosperis.com','securerul.ukr.net','yahoo'],
+      values:[68,24,4,2,1,1], colors:[gold, '#E1306C', '#1877F2', positive, faint, negative] };
+    new Chart(document.getElementById('ov-channel'), { type:'doughnut',
+      data:{ labels:ch.labels, datasets:[{ data:ch.values, backgroundColor:ch.colors, borderWidth:2, borderColor:'#FFFFFF' }] },
+      options:{ maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} } });
+    buildLegend('ov-channel-legend', ch.labels, ch.values, ch.colors, '%');
+  }
+
+  function initSite(){
+    new Chart(document.getElementById('site-users'), { type:'line',
+      data:{ labels:['1 лип','5 лип','9 лип','13 лип','17 лип','21 лип','25 лип','29 лип'],
+        datasets:[{ data:[18,26,14,22,30,19,24,17], borderColor:gold, backgroundColor:(c)=>gradArea(c.chart.ctx, gold, '55','05'), borderWidth:2.5, pointRadius:0, tension:.4, fill:true }] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:noGridX, y:baseGrid } } });
+
+    new Chart(document.getElementById('site-weeks'), { type:'bar',
+      data:{ labels:['Тиж. 27','Тиж. 28','Тиж. 29','Тиж. 30','Тиж. 31'],
+        datasets:[{ data:[68,120,88,70,77], backgroundColor:['#2B46D622','#2B46D688','#2B46D6BB','#2B46D6DD','#2B46D6FF'], borderRadius:3, maxBarThickness:34 }] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:noGridX, y:baseGrid } } });
+
+    new Chart(document.getElementById('site-acquisition'), { type:'bar',
+      data:{ labels:['google','instagram','facebook','agroprosperis.com','direct','yahoo'],
+        datasets:[{ data:[140,72,18,9,6,3], backgroundColor:gold, borderRadius:3, maxBarThickness:18 }] },
+      options:{ indexAxis:'y', maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:baseGrid, y:{ grid:{display:false}, ticks:{ color:soft, font:{size:11} } } } } });
+
+    const dev = { labels:['Мобільні','Десктоп','Планшети'], values:[64,31,5], colors:[gold, blue, faint] };
+    new Chart(document.getElementById('site-devices'), { type:'doughnut',
+      data:{ labels:dev.labels, datasets:[{ data:dev.values, backgroundColor:dev.colors, borderWidth:2, borderColor:'#FFFFFF' }] },
+      options:{ maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} } });
+    buildLegend('site-devices-legend', dev.labels, dev.values, dev.colors, '%');
+  }
+
+  function initSeo(){
+    new Chart(document.getElementById('seo-trend'), { type:'line',
+      data:{ labels:['Тиж. 27','Тиж. 28','Тиж. 29','Тиж. 30','Тиж. 31'],
+        datasets:[
+          { label:'Покази', data:[46000,52000,44000,38000,34000], borderColor:blue, backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:.35, yAxisID:'y' },
+          { label:'Кліки', data:[1900,2400,2000,1700,1640], borderColor:gold, backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:.35, yAxisID:'y1' }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:11}, boxWidth:10}}},
+        scales:{ x:noGridX, y:{ ...baseGrid, position:'left' }, y1:{ position:'right', grid:{display:false}, ticks:{ color:soft, font:{size:11} } } } } });
+
+    const dv = { labels:['Мобільні','Десктоп','Планшети'], values:[58,37,5], colors:[gold, blue, faint] };
+    new Chart(document.getElementById('seo-devices'), { type:'doughnut',
+      data:{ labels:dv.labels, datasets:[{ data:dv.values, backgroundColor:dv.colors, borderWidth:2, borderColor:'#FFFFFF' }] },
+      options:{ maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} } });
+    buildLegend('seo-devices-legend', dv.labels, dv.values, dv.colors, '%');
+  }
+
+  function followersLine(canvasId, color, dataThis, dataPrev){
+    new Chart(document.getElementById(canvasId), { type:'line',
+      data:{ labels:['1 лип','5 лип','9 лип','13 лип','17 лип','21 лип','25 лип','29 лип'],
+        datasets:[
+          { label:'Цей місяць', data:dataThis, borderColor:color, backgroundColor:color+'1A', borderWidth:2.5, pointRadius:0, tension:.3, fill:true },
+          { label:'Попер. місяць', data:dataPrev, borderColor:color+'80', borderDash:[4,3], backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:.3 }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}},
+        scales:{ x:noGridX, y:baseGrid } } });
+  }
+  function growthBars(canvasId, color, dataThis, dataPrev){
+    new Chart(document.getElementById(canvasId), { type:'bar',
+      data:{ labels:['1 лип','5 лип','9 лип','13 лип','17 лип','21 лип','25 лип','29 лип'],
+        datasets:[
+          { label:'Цей місяць', data:dataThis, backgroundColor:color, borderRadius:2, maxBarThickness:14 },
+          { label:'Попер. місяць', data:dataPrev, backgroundColor:color+'40', borderRadius:2, maxBarThickness:14 }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}},
+        scales:{ x:noGridX, y:{ grid:{color:line}, ticks:{color:soft, font:{size:11}, stepSize:1, precision:0}, border:{display:false} } } } });
+  }
+
+  function initSocial(){
+    followersLine('fb-followers', '#1877F2', [140,142,144,146,150,158,160,160], [141,140,140,141,141,141,141,141]);
+    growthBars('fb-growth', '#1877F2', [1,0,2,1,0,3,4,0], [0,1,1,0,0,0,0,0]);
+    followersLine('ig-followers', '#E1306C', [115,116,115,116,118,124,125,124], [115,115,114,114,114,114,114,114]);
+    growthBars('ig-growth', '#E1306C', [0,0,0,1,0,5,2,1], [0,0,0,0,0,0,0,0]);
+  }
+
+  function initAds(){
+    new Chart(document.getElementById('ads-spend-days'), { type:'bar',
+      data:{ labels:['1','3','5','7','9','11','13','15','17','19','21','23','25','27','29','31'],
+        datasets:[
+          { label:'Цей місяць', data:[1400,1300,1450,0,0,0,0,0,0,0,0,0,0,0,0,0], backgroundColor:gold, borderRadius:2, maxBarThickness:14 },
+          { label:'Попер. місяць', data:[0,0,0,0,0,0,0,0,0,1200,1250,1180,1300,1260,1220,0], backgroundColor:gold+'40', borderRadius:2, maxBarThickness:14 }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}},
+        scales:{ x:noGridX, y:baseGrid } } });
+
+    const camp = { labels:['Акції — липень','Ретаргетинг','Ресторани','Brand Search','Сезонні'],
+      values:[38,26,16,11,9], colors:[gold, blue, accent, positive, negative] };
+    new Chart(document.getElementById('ads-campaigns'), { type:'doughnut',
+      data:{ labels:camp.labels, datasets:[{ data:camp.values, backgroundColor:camp.colors, borderWidth:2, borderColor:'#FFFFFF' }] },
+      options:{ maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} } });
+    buildLegend('ads-campaigns-legend', camp.labels, camp.values, camp.colors, '%');
+
+    new Chart(document.getElementById('ads-weeks'), { type:'bar',
+      data:{ labels:['Тиж. 27','Тиж. 28','Тиж. 29','Тиж. 30','Тиж. 31'],
+        datasets:[
+          { label:'Покази', data:[62000,71000,58000,53000,68000], backgroundColor:gold, borderRadius:3, maxBarThickness:26 },
+          { label:'Покази (попер. місяць)', data:[54000,60000,55000,49000,58000], backgroundColor:gold+'40', borderRadius:3, maxBarThickness:26 }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}},
+        scales:{ x:noGridX, y:baseGrid } } });
+
+    new Chart(document.getElementById('ads-leads-cpa'), { type:'line',
+      data:{ labels:['1','5','9','13','17','21','25','29'],
+        datasets:[
+          { label:'Ліди', data:[32,41,38,44,52,47,58,61], borderColor:gold, backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:.35, yAxisID:'y' },
+          { label:'CPA ₴', data:[31,29,30,27,26,28,24,23], borderColor:accent, backgroundColor:'transparent', borderWidth:2.5, pointRadius:0, tension:.35, yAxisID:'y1' }
+        ] },
+      options:{ maintainAspectRatio:false, plugins:{legend:{display:true, labels:{color:soft, font:{size:10.5}, boxWidth:10}}},
+        scales:{ x:noGridX, y:{ ...baseGrid, position:'left' }, y1:{ position:'right', grid:{display:false}, ticks:{ color:soft, font:{size:11} } } } } });
+  }
+
+  const initFns = { overview:initOverview, site:initSite, seo:initSeo, social:initSocial, ads:initAds };
+
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-'+tab.dataset.page).classList.add('active');
+      if(!initialized[tab.dataset.page]){ initFns[tab.dataset.page](); initialized[tab.dataset.page] = true; }
+    });
+  });
+
+  initOverview(); initialized.overview = true;
+</script>
+</body>
+</html>
